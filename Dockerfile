@@ -1,17 +1,23 @@
-# Use an official OpenJDK runtime as a parent image
-FROM openjdk:8-jdk-alpine
+# Use a JDK image to build and run the application
+FROM openjdk:11-jdk-slim
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# Copy the POM file and source code
+COPY pom.xml .
+COPY src ./src
 
 # Install Maven
-RUN apk add --no-cache maven
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 
 # Build the application
-RUN mvn package
+RUN mvn clean package
 
-# Run the application
-CMD ["java", "-jar", "target/SimpleJavaApp-1.0-SNAPSHOT.jar"]
+# Copy the JAR file into the image
+COPY target/SimpleJavaMicroserviceApp-1.0-SNAPSHOT.jar app.jar
+
+# Expose the port the app runs on
+EXPOSE 8080
+
+# Command to run the JAR file
+ENTRYPOINT ["java", "-jar", "app.jar"]
